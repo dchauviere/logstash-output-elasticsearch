@@ -209,12 +209,13 @@ describe "outputs/elasticsearch" do
   describe "the action option" do
     subject(:eso) {LogStash::Outputs::ElasticSearch.new(options)}
     context "with a sprintf action" do
-      let(:options) { {"action" => "%{myactionfield}"} }
+      let(:options) { {"action" => "%{myactionfield}", "upsert" => '{"message": "some text"}'} }
 
       let(:event) { LogStash::Event.new("myactionfield" => "update", "message" => "blah") }
 
-      it "should interpolate the requested action value when creating an event_action_tuple" do
+      it "should interpolate the requested action value when creating an event_action_tuple and obtain associated action params" do
         expect(eso.event_action_tuple(event).first).to eql("update")
+        expect(eso.event_action_tuple(event)[1]).to include(:_upsert)
       end
     end
 
