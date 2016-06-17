@@ -74,7 +74,13 @@ describe "index template expected behavior", :integration => true do
     insist { results["hits"]["total"] } == 0
   end
 
-  it "make [geoip][location] a geo_point" do
+  it "make [geoip][location] a geo_point", :unless => :version_5x do
+    results = @es.search(:body => { "filter" => { "geo_distance" => { "distance" => "1000km", "geoip.location" => { "lat" => 0.5, "lon" => 0.5 } } } })
+    insist { results["hits"]["total"] } == 1
+    insist { results["hits"]["hits"][0]["_source"]["geoip"]["location"] } == [ 0.0, 0.0 ]
+  end
+
+  it "make [geoip][location] a geo_point", :if => :version_5x do
     results = @es.search(:body => { "query" => { "bool" => { "must" => { "match_all" => {} }, "filter" => { "geo_distance" => { "distance" => "1000km", "geoip.location" => { "lat" => 0.5, "lon" => 0.5 } } } } } })
     insist { results["hits"]["total"] } == 1
     insist { results["hits"]["hits"][0]["_source"]["geoip"]["location"] } == [ 0.0, 0.0 ]
@@ -90,5 +96,3 @@ describe "index template expected behavior", :integration => true do
     insist { terms }.include?("at")
   end
 end
-
-
